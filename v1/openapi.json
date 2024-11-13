@@ -1,0 +1,4252 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "USDX API - X Protocol",
+    "version": "1.0.0",
+    "description": "API for managing USDX stablecoin operations within the X Protocol."
+  },
+  "servers": [
+    {
+      "url": "https://api.xprotocol.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://api.staging.xprotocol.com/v1",
+      "description": "Staging server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "AddressList": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "ethereum-address"
+            }
+          }
+        },
+        "required": ["addresses"]
+      },
+      "RoleAssignment": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "format": "ethereum-address"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "DEFAULT_ADMIN_ROLE",
+              "MINTER_ROLE",
+              "BURNER_ROLE",
+              "BLOCKLIST_ROLE",
+              "ORACLE_ROLE",
+              "UPGRADE_ROLE",
+              "PAUSE_ROLE"
+            ]
+          }
+        },
+        "required": ["address", "role"]
+      },
+      "RewardMultiplier": {
+        "type": "object",
+        "properties": {
+          "multiplier": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["multiplier"]
+      },
+      "DepositRequest": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "format": "ethereum-address"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          },
+          "collateralType": {
+            "type": "string",
+            "enum": ["USDC", "fiat"]
+          }
+        },
+        "required": ["user", "amount", "collateralType"]
+      },
+      "RedeemRequest": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "format": "ethereum-address"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["user", "amount"]
+      },
+      "MintRequest": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "format": "ethereum-address"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["to", "amount"]
+      },
+      "BurnRequest": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "ethereum-address"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["from", "amount"]
+      },
+      "ConvertRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["amount"]
+      },
+      "ConvertSharesRequest": {
+        "type": "object",
+        "properties": {
+          "shares": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["shares"]
+      },
+      "ExchangeRateRequest": {
+        "type": "object",
+        "properties": {
+          "fromCurrency": {
+            "type": "string"
+          },
+          "toCurrency": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "required": ["fromCurrency", "toCurrency", "amount"]
+      },
+      "TokenDetails": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer"
+          },
+          "totalSupply": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/token/supply": {
+      "get": {
+        "summary": "Get Total Token Supply",
+        "responses": {
+          "200": {
+            "description": "Total supply of USDX tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Mint New USDX Tokens",
+        "requestBody": {
+          "description": "Details for minting tokens",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MintRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tokens minted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["success", "pending", "failed"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/token/supply/burn": {
+      "post": {
+        "summary": "Burn USDX Tokens",
+        "requestBody": {
+          "description": "Details for burning tokens",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BurnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens burned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["success", "pending", "failed"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/token/supply/{address}": {
+      "get": {
+        "summary": "Get Shares for Address",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Ethereum address",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ethereum-address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shares for the specified address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "shares": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Address not found"
+          }
+        }
+      }
+    },
+    "/token/convert/shares": {
+      "get": {
+        "summary": "Convert Tokens to Shares",
+        "parameters": [
+          {
+            "name": "amount",
+            "in": "query",
+            "description": "Amount of tokens to convert",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tokens": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "shares": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/token/convert/tokens": {
+      "get": {
+        "summary": "Convert Shares to Tokens",
+        "parameters": [
+          {
+            "name": "shares",
+            "in": "query",
+            "description": "Amount of shares to convert",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shares": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "tokens": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/block": {
+      "post": {
+        "summary": "Block Accounts",
+        "requestBody": {
+          "description": "List of addresses to block",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accounts blocked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "blockedAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/unblock": {
+      "post": {
+        "summary": "Unblock Accounts",
+        "requestBody": {
+          "description": "List of addresses to unblock",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accounts unblocked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "unblockedAddresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/blocked/{address}": {
+      "get": {
+        "summary": "Check if Address is Blocked",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Ethereum address to check",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ethereum-address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Block status of the address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "isBlocked": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Address not found"
+          }
+        }
+      }
+    },
+    "/roles/grant": {
+      "post": {
+        "summary": "Grant Role to Address",
+        "requestBody": {
+          "description": "Role assignment details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role granted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["granted"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/revoke": {
+      "post": {
+        "summary": "Revoke Role from Address",
+        "requestBody": {
+          "description": "Role revocation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role revoked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["revoked"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/protocol/pause": {
+      "post": {
+        "summary": "Pause Protocol",
+        "responses": {
+          "200": {
+            "description": "Protocol paused successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["paused"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/protocol/unpause": {
+      "post": {
+        "summary": "Unpause Protocol",
+        "responses": {
+          "200": {
+            "description": "Protocol unpaused successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["unpaused"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/protocol/status": {
+      "get": {
+        "summary": "Get Protocol Pause Status",
+        "responses": {
+          "200": {
+            "description": "Current pause status of the protocol",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "isPaused": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rewards/multiplier": {
+      "post": {
+        "summary": "Update Reward Multiplier",
+        "requestBody": {
+          "description": "New reward multiplier",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RewardMultiplier"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reward multiplier updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "multiplier": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["updated"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Current Reward Multiplier",
+        "responses": {
+          "200": {
+            "description": "Current reward multiplier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RewardMultiplier"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wrapped/deposit": {
+      "post": {
+        "summary": "Deposit USDX for wUSDX",
+        "requestBody": {
+          "description": "Deposit details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "required": ["user", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Deposit successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "wUSDXReceived": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "transactionId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wrapped/withdraw": {
+      "post": {
+        "summary": "Withdraw USDX from wUSDX",
+        "requestBody": {
+          "description": "Withdrawal details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "required": ["user", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "USDXWithdrawn": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "transactionId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wrapped/balance/{address}": {
+      "get": {
+        "summary": "Get wUSDX Balance",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Ethereum address",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ethereum-address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "wUSDX balance of the address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "wUSDXBalance": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Address not found"
+          }
+        }
+      }
+    },
+    "/permits/nonce/{address}": {
+      "get": {
+        "summary": "Get Current Nonce",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Ethereum address",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ethereum-address"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current nonce for the address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "nonce": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permits/approve": {
+      "post": {
+        "summary": "Create Permit Approval",
+        "requestBody": {
+          "description": "Permit approval details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "spender": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "value": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "deadline": {
+                    "type": "integer",
+                    "description": "Unix timestamp"
+                  },
+                  "v": {
+                    "type": "integer"
+                  },
+                  "r": {
+                    "type": "string"
+                  },
+                  "s": {
+                    "type": "string"
+                  }
+                },
+                "required": ["owner", "spender", "value", "deadline", "v", "r", "s"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Permit approved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "permitId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["approved"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/balances": {
+      "get": {
+        "summary": "List All Account Balances",
+        "responses": {
+          "200": {
+            "description": "List of all account balances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "balance": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts": {
+      "get": {
+        "summary": "List All Payouts",
+        "responses": {
+          "200": {
+            "description": "List of all payouts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "payoutId": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "recipient": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "completed", "failed"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create New Payout",
+        "requestBody": {
+          "description": "Payout details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USDX"]
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  }
+                },
+                "required": ["amount", "currency", "recipient"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payout created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payoutId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts/{id}": {
+      "get": {
+        "summary": "Get Specific Payout",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payout ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payout details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payoutId": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "completed", "failed"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payout not found"
+          }
+        }
+      }
+    },
+    "/fees/daily": {
+      "get": {
+        "summary": "List NET Burn Fee Calculations",
+        "responses": {
+          "200": {
+            "description": "Daily fee calculations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "netBurnFee": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/banks/wires": {
+      "get": {
+        "summary": "List Wire Bank Accounts",
+        "responses": {
+          "200": {
+            "description": "List of wire bank accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bankId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Wire Bank Account",
+        "requestBody": {
+          "description": "Wire bank account details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bankDetails": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "accountNumber", "routingNumber"]
+                  }
+                },
+                "required": ["bankDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wire bank account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/banks/wires/{id}": {
+      "get": {
+        "summary": "Get Specific Wire Account",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Wire bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wire bank account details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "accountNumber": {
+                      "type": "string"
+                    },
+                    "routingNumber": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wire bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/wires/{id}/instructions": {
+      "get": {
+        "summary": "Get Wire Instructions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Wire bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wire instructions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instructions": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wire bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/cbit": {
+      "get": {
+        "summary": "List CBIT Bank Accounts",
+        "responses": {
+          "200": {
+            "description": "List of CBIT bank accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bankId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create CBIT Bank Account",
+        "requestBody": {
+          "description": "CBIT bank account details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bankDetails": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "accountNumber", "routingNumber"]
+                  }
+                },
+                "required": ["bankDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "CBIT bank account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/banks/cbit/{id}": {
+      "get": {
+        "summary": "Get Specific CBIT Account",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "CBIT bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CBIT bank account details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "accountNumber": {
+                      "type": "string"
+                    },
+                    "routingNumber": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CBIT bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/cbit/{id}/instructions": {
+      "get": {
+        "summary": "Get CBIT Instructions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "CBIT bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CBIT instructions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instructions": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CBIT bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/cubix": {
+      "get": {
+        "summary": "List CUBIX Bank Accounts",
+        "responses": {
+          "200": {
+            "description": "List of CUBIX bank accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bankId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create CUBIX Bank Account",
+        "requestBody": {
+          "description": "CUBIX bank account details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bankDetails": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "accountNumber", "routingNumber"]
+                  }
+                },
+                "required": ["bankDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "CUBIX bank account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/banks/cubix/{id}": {
+      "get": {
+        "summary": "Get Specific CUBIX Account",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "CUBIX bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CUBIX bank account details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "accountNumber": {
+                      "type": "string"
+                    },
+                    "routingNumber": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CUBIX bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/cubix/{id}/instructions": {
+      "get": {
+        "summary": "Get CUBIX Instructions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "CUBIX bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CUBIX instructions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instructions": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CUBIX bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/pix": {
+      "get": {
+        "summary": "List PIX Bank Accounts",
+        "responses": {
+          "200": {
+            "description": "List of PIX bank accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bankId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create PIX Bank Account",
+        "requestBody": {
+          "description": "PIX bank account details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bankDetails": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "accountNumber": {
+                        "type": "string"
+                      },
+                      "routingNumber": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["name", "accountNumber", "routingNumber"]
+                  }
+                },
+                "required": ["bankDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "PIX bank account created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/banks/pix/{id}": {
+      "get": {
+        "summary": "Get Specific PIX Account",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "PIX bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PIX bank account details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bankId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "accountNumber": {
+                      "type": "string"
+                    },
+                    "routingNumber": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PIX bank account not found"
+          }
+        }
+      }
+    },
+    "/banks/pix/{id}/instructions": {
+      "get": {
+        "summary": "Get PIX Instructions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "PIX bank account ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PIX instructions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "instructions": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PIX bank account not found"
+          }
+        }
+      }
+    },
+    "/transfers": {
+      "get": {
+        "summary": "List All Transfers",
+        "responses": {
+          "200": {
+            "description": "List of all transfers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "transferId": {
+                        "type": "string"
+                      },
+                      "from": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "to": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "completed", "failed"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Transfer",
+        "requestBody": {
+          "description": "Transfer details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                },
+                "required": ["from", "to", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transferId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transfers/{id}": {
+      "get": {
+        "summary": "Get Specific Transfer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Transfer ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transfer details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transferId": {
+                      "type": "string"
+                    },
+                    "from": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "to": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "completed", "failed"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transfer not found"
+          }
+        }
+      }
+    },
+    "/addresses/deposit": {
+      "get": {
+        "summary": "List Deposit Addresses",
+        "responses": {
+          "200": {
+            "description": "List of deposit addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "addressId": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "depositAddress": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Deposit Address",
+        "requestBody": {
+          "description": "Deposit address creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  }
+                },
+                "required": ["user"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Deposit address created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addressId": {
+                      "type": "string"
+                    },
+                    "depositAddress": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/addresses/recipient": {
+      "get": {
+        "summary": "List Recipient Addresses",
+        "responses": {
+          "200": {
+            "description": "List of recipient addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "recipientId": {
+                        "type": "string"
+                      },
+                      "recipient": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "details": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Recipient Address",
+        "requestBody": {
+          "description": "Recipient address creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipient": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "details": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      }
+                    }
+                  }
+                },
+                "required": ["recipient"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recipient address created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "details": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/addresses/recipient/{id}": {
+      "delete": {
+        "summary": "Delete Recipient Address",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Recipient address ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipient address deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["deleted"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipient address not found"
+          }
+        }
+      }
+    },
+    "/deposits": {
+      "get": {
+        "summary": "List All Deposits",
+        "responses": {
+          "200": {
+            "description": "List of all deposits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "depositId": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "collateralType": {
+                        "type": "string",
+                        "enum": ["USDC", "fiat"]
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "completed", "failed"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallets": {
+      "get": {
+        "summary": "List All Wallets",
+        "responses": {
+          "200": {
+            "description": "List of all wallets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "walletId": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "string"
+                      },
+                      "walletType": {
+                        "type": "string",
+                        "enum": ["crypto", "fiat"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Wallet",
+        "requestBody": {
+          "description": "Wallet creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string"
+                  },
+                  "walletType": {
+                    "type": "string",
+                    "enum": ["crypto", "fiat"]
+                  }
+                },
+                "required": ["userId", "walletType"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "walletId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wallets/{id}": {
+      "get": {
+        "summary": "Get Specific Wallet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Wallet ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "walletId": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "walletType": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wallet not found"
+          }
+        }
+      }
+    },
+    "/wallets/addresses": {
+      "get": {
+        "summary": "List Wallet Addresses",
+        "responses": {
+          "200": {
+            "description": "List of wallet addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "addressId": {
+                        "type": "string"
+                      },
+                      "walletId": {
+                        "type": "string"
+                      },
+                      "blockchain": {
+                        "type": "string"
+                      },
+                      "blockchainAddress": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Blockchain Address",
+        "requestBody": {
+          "description": "Blockchain address creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "walletId": {
+                    "type": "string"
+                  },
+                  "blockchain": {
+                    "type": "string",
+                    "enum": ["Ethereum", "Bitcoin", "Other"]
+                  }
+                },
+                "required": ["walletId", "blockchain"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Blockchain address created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "addressId": {
+                      "type": "string"
+                    },
+                    "blockchainAddress": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments": {
+      "get": {
+        "summary": "List All Payments",
+        "responses": {
+          "200": {
+            "description": "List of all payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "paymentId": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "recipient": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "captured", "canceled", "refunded"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Payment",
+        "requestBody": {
+          "description": "Payment creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USDX"]
+                  },
+                  "recipient": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  }
+                },
+                "required": ["amount", "currency", "recipient"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "summary": "Get Specific Payment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "captured", "canceled", "refunded"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found"
+          }
+        }
+      }
+    },
+    "/payments/{id}/capture": {
+      "post": {
+        "summary": "Capture Payment (BETA)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment captured successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["captured"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payment state"
+          },
+          "404": {
+            "description": "Payment not found"
+          }
+        }
+      }
+    },
+    "/payments/{id}/cancel": {
+      "post": {
+        "summary": "Cancel Payment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment canceled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["canceled"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payment state"
+          },
+          "404": {
+            "description": "Payment not found"
+          }
+        }
+      }
+    },
+    "/payments/{id}/refund": {
+      "post": {
+        "summary": "Refund Payment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment refunded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["refunded"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payment state"
+          },
+          "404": {
+            "description": "Payment not found"
+          }
+        }
+      }
+    },
+    "/payments/exchange-rate": {
+      "post": {
+        "summary": "Get Exchange Rate",
+        "requestBody": {
+          "description": "Exchange rate request details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeRateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exchange rate details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fromCurrency": {
+                      "type": "string"
+                    },
+                    "toCurrency": {
+                      "type": "string"
+                    },
+                    "exchangeRate": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "convertedAmount": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid currency pair or amount"
+          }
+        }
+      }
+    },
+    "/crypto/message": {
+      "get": {
+        "summary": "Get Signing Message",
+        "responses": {
+          "200": {
+            "description": "Signing message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/crypto/payment": {
+      "post": {
+        "summary": "Create Crypto Payment",
+        "requestBody": {
+          "description": "Crypto payment details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USDX"]
+                  }
+                },
+                "required": ["user", "amount", "currency"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Crypto payment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cryptoPaymentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment-intents": {
+      "get": {
+        "summary": "List Payment Intents",
+        "responses": {
+          "200": {
+            "description": "List of payment intents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "intentId": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["active", "expired", "refunded"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Payment Intent",
+        "requestBody": {
+          "description": "Payment intent creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": ["USDX"]
+                  }
+                },
+                "required": ["user", "amount", "currency"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment intent created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "intentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payment-intents/{id}": {
+      "get": {
+        "summary": "Get Specific Payment Intent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment intent ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment intent details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "intentId": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active", "expired", "refunded"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment intent not found"
+          }
+        }
+      }
+    },
+    "/payment-intents/{id}/expire": {
+      "post": {
+        "summary": "Expire Payment Intent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment intent ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment intent expired successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "intentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["expired"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid intent state"
+          },
+          "404": {
+            "description": "Payment intent not found"
+          }
+        }
+      }
+    },
+    "/payment-intents/{id}/refund": {
+      "post": {
+        "summary": "Refund Payment Intent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Payment intent ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment intent refunded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "intentId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["refunded"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid intent state"
+          },
+          "404": {
+            "description": "Payment intent not found"
+          }
+        }
+      }
+    },
+    "/cards": {
+      "get": {
+        "summary": "List All Cards",
+        "responses": {
+          "200": {
+            "description": "List of all cards",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "cardId": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "cardDetails": {
+                        "type": "object",
+                        "properties": {
+                          "number": {
+                            "type": "string"
+                          },
+                          "expiry": {
+                            "type": "string"
+                          },
+                          "cvv": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Card",
+        "requestBody": {
+          "description": "Card creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "cardDetails": {
+                    "type": "object",
+                    "properties": {
+                      "number": {
+                        "type": "string"
+                      },
+                      "expiry": {
+                        "type": "string"
+                      },
+                      "cvv": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["number", "expiry", "cvv"]
+                  }
+                },
+                "required": ["user", "cardDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Card created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cardId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cards/{id}": {
+      "get": {
+        "summary": "Get Specific Card",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Card ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cardId": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "cardDetails": {
+                      "type": "object",
+                      "properties": {
+                        "number": {
+                          "type": "string"
+                        },
+                        "expiry": {
+                          "type": "string"
+                        },
+                        "cvv": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Card not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Card",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Card ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Card update details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cardDetails": {
+                    "type": "object",
+                    "properties": {
+                      "expiry": {
+                        "type": "string"
+                      },
+                      "cvv": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Card updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cardId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["updated"]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Card not found"
+          }
+        }
+      }
+    },
+    "/payment-tokens": {
+      "post": {
+        "summary": "Create Payment Token",
+        "requestBody": {
+          "description": "Payment token creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "tokenType": {
+                    "type": "string",
+                    "enum": ["ERC20"]
+                  },
+                  "tokenDetails": {
+                    "type": "object",
+                    "properties": {
+                      "contractAddress": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "symbol": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["contractAddress", "symbol"]
+                  }
+                },
+                "required": ["user", "tokenType", "tokenDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment token created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tokenId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settlements": {
+      "get": {
+        "summary": "List All Settlements",
+        "responses": {
+          "200": {
+            "description": "List of all settlements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "settlementId": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "completed", "failed"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settlements/{id}": {
+      "get": {
+        "summary": "Get Specific Settlement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Settlement ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settlement details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "settlementId": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "completed", "failed"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Settlement not found"
+          }
+        }
+      }
+    },
+    "/chargebacks": {
+      "get": {
+        "summary": "List All Chargebacks",
+        "responses": {
+          "200": {
+            "description": "List of all chargebacks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "chargebackId": {
+                        "type": "string"
+                      },
+                      "paymentId": {
+                        "type": "string"
+                      },
+                      "reason": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["pending", "resolved"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Mock Chargeback",
+        "requestBody": {
+          "description": "Mock chargeback details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paymentId": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": ["paymentId", "reason"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mock chargeback created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chargebackId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chargebacks/{id}": {
+      "get": {
+        "summary": "Get Specific Chargeback",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Chargeback ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chargeback details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chargebackId": {
+                      "type": "string"
+                    },
+                    "paymentId": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["pending", "resolved"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Chargeback not found"
+          }
+        }
+      }
+    },
+    "/checkout-sessions": {
+      "get": {
+        "summary": "List All Checkout Sessions",
+        "responses": {
+          "200": {
+            "description": "List of all checkout sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sessionId": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "paymentDetails": {
+                        "type": "object",
+                        "properties": {
+                          "amount": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "currency": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": ["active", "extended", "closed"]
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Checkout Session",
+        "requestBody": {
+          "description": "Checkout session creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "paymentDetails": {
+                    "type": "object",
+                    "properties": {
+                      "amount": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": ["USDX"]
+                      }
+                    },
+                    "required": ["amount", "currency"]
+                  }
+                },
+                "required": ["user", "paymentDetails"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkout-sessions/{id}": {
+      "get": {
+        "summary": "Get Specific Checkout Session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Checkout session ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checkout session details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "paymentDetails": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "number",
+                          "format": "float"
+                        },
+                        "currency": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active", "extended", "closed"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Checkout session not found"
+          }
+        }
+      }
+    },
+    "/checkout-sessions/{id}/extend": {
+      "post": {
+        "summary": "Extend Checkout Session",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Checkout session ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checkout session extended successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["extended"]
+                    },
+                    "extendedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Cannot extend session"
+          },
+          "404": {
+            "description": "Checkout session not found"
+          }
+        }
+      }
+    },
+    "/recipients": {
+      "get": {
+        "summary": "List All Recipients",
+        "responses": {
+          "200": {
+            "description": "List of all recipients",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "recipientId": {
+                        "type": "string"
+                      },
+                      "recipient": {
+                        "type": "string",
+                        "format": "ethereum-address"
+                      },
+                      "details": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          }
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Recipient",
+        "requestBody": {
+          "description": "Recipient creation details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipient": {
+                    "type": "string",
+                    "format": "ethereum-address"
+                  },
+                  "details": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      }
+                    }
+                  }
+                },
+                "required": ["recipient"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recipient created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["created"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recipients/{id}": {
+      "get": {
+        "summary": "Get Specific Recipient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Recipient ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipient details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "ethereum-address"
+                    },
+                    "details": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipient not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Modify Recipient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Recipient ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Recipient modification details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "details": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recipient modified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["modified"]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipient not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Recipient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Recipient ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recipient deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recipientId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["deleted"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recipient not found"
+          }
+        }
+      }
+    },
+    "/exchange-rates": {
+      "get": {
+        "summary": "Get Exchange Rate",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Source currency",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Target currency",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exchange rate information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fromCurrency": {
+                      "type": "string"
+                    },
+                    "toCurrency": {
+                      "type": "string"
+                    },
+                    "exchangeRate": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid currency pair"
+          }
+        }
+      }
+    }
+  }
+}
